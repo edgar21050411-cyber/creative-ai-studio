@@ -75,11 +75,37 @@ function Index() {
     document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const sendMessage = () => {
+  const showNotice = (text: string) => {
+    setNotice(text);
+    window.setTimeout(() => setNotice(""), 3500);
+  };
+
+  const sendMessage = async () => {
     const text = message.trim();
-    if (!text) return;
-    setMessages((current) => [...current, { role: "user", text }, { role: "assistant", text: "Tu idea está lista. Esta vista muestra el flujo visual del chat." }]);
+    if (!text || sending) return;
+    if (!loggedIn) {
+      showNotice("Inicia sesión para usar el chat de texto.");
+      return;
+    }
+    setSending(true);
+    setMessages((current) => [...current, { role: "user", text }]);
     setMessage("");
+    try {
+      const result = await sendChat({ data: { message: text, history: messages.slice(-20) } });
+      if (result.ok) {
+        setMessages((current) => [...current, { role: "assistant", text: result.reply }]);
+        setCredits(result.credits);
+      } else if (result.reason === "insufficient_credits") {
+        setCredits(0);
+        showNotice("No te quedan créditos. Recarga tu saldo para seguir generando.");
+      } else {
+        showNotice(result.message);
+      }
+    } catch {
+      showNotice("Inicia sesión para usar el chat de texto.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const generate = (kind: "imagen" | "video") => {

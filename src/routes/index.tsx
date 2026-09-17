@@ -53,6 +53,7 @@ function Index() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [sending, setSending] = useState(false);
   const sendChat = useServerFn(sendChatMessage);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;

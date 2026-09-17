@@ -160,7 +160,7 @@ function Index() {
           </div>
           <div className="mt-4 flex items-end gap-2 rounded-2xl border border-border bg-overlay px-3 py-2 focus-within:border-primary/60">
             <textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} rows={2} className="min-w-0 flex-1 resize-none bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground" placeholder="Escribe tu mensaje…" aria-label="Mensaje" />
-            <Button variant="icon" size="icon" onClick={sendMessage} aria-label="Enviar mensaje"><ArrowUp className="size-4" /></Button>
+            <Button variant="icon" size="icon" onClick={() => void sendMessage()} disabled={sending} aria-label="Enviar mensaje">{sending ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}</Button>
           </div>
         </section>
 

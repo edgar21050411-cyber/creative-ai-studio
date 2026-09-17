@@ -100,7 +100,7 @@ function Index() {
 
       <section className="relative z-10 mx-auto max-w-6xl px-4 pb-9 pt-14 text-center sm:px-6 sm:pb-11 sm:pt-20">
         <span className="inline-flex items-center gap-2 rounded-full border border-border bg-overlay px-4 py-1.5 text-xs font-medium uppercase text-muted-foreground"><Sparkles className="size-3.5 text-accent" /> Suite creativa de IA</span>
-        <h1 className="mx-auto mt-6 max-w-3xl font-display text-4xl font-bold leading-[1.05] sm:text-6xl">Crea <span className="bg-action bg-clip-text text-transparent">texto, imágenes y video</span> con una sola IA.</h1>
+        <h1 className="mx-auto mt-6 max-w-3xl font-display text-4xl font-bold leading-[1.05] sm:text-6xl">Crea <span className="text-gradient">texto, imágenes y video</span> con una sola IA.</h1>
         <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">Una interfaz fluida para explorar tus ideas con libertad creativa. Escribe, imagina y genera.</p>
       </section>
 

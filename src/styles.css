@@ -167,6 +167,12 @@
   background: var(--action);
 }
 
+@utility text-gradient {
+  background: var(--action);
+  background-clip: text;
+  color: transparent;
+}
+
 @keyframes gentle-float {
   from { transform: translateY(0); }
   to { transform: translateY(-10px); }

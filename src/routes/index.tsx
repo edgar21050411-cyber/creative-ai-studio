@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Coins, Image as ImageIcon, Loader2, LogIn, Menu, Play, Sparkles, Video } from "lucide-react";
+import { ArrowUp, Coins, Image as ImageIcon, Loader2, LogIn, LogOut, Menu, Play, Sparkles, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";

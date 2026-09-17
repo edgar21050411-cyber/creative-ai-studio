@@ -109,8 +109,7 @@ function Index() {
   };
 
   const generate = (kind: "imagen" | "video") => {
-    setNotice(`${kind === "imagen" ? "Imagen" : "Video"} preparado con el estilo seleccionado.`);
-    window.setTimeout(() => setNotice(""), 2800);
+    showNotice(`${kind === "imagen" ? "Imagen" : "Video"} preparado con el estilo seleccionado.`);
   };
 
   return (
@@ -136,7 +135,7 @@ function Index() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="flex h-9 items-center gap-1.5 rounded-full border border-border bg-overlay px-2.5 text-xs sm:px-3 sm:text-sm">
-              <Coins className="size-3.5 text-accent" /><span className="hidden xs:inline">Créditos:</span><b>50</b>
+              <Coins className="size-3.5 text-accent" /><span className="hidden xs:inline">Créditos:</span><b>{credits ?? 50}</b>
             </div>
             <Button className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm" onClick={() => setNotice("El acceso de usuarios está listo para conectarse.")}>
               <LogIn className="size-4" /><span className="hidden sm:inline">Iniciar sesión</span>

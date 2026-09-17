@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUp, Coins, Image as ImageIcon, LogIn, Menu, Play, Sparkles, Video } from "lucide-react";
-import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowUp, Coins, Image as ImageIcon, Loader2, LogIn, Menu, Play, Sparkles, Video } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { supabase } from "@/integrations/supabase/client";
+import { sendChatMessage } from "@/lib/chat.functions";
 
 import lighthouseCinematic from "@/assets/lighthouse-cinematic.jpg";
 import lighthouseWatercolor from "@/assets/lighthouse-watercolor.jpg";
@@ -45,6 +49,25 @@ function Index() {
   const [videoStyle, setVideoStyle] = useState("Cinemático");
   const [notice, setNotice] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [sending, setSending] = useState(false);
+  const sendChat = useServerFn(sendChatMessage);
+
+  useEffect(() => {
+    let active = true;
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      setLoggedIn(Boolean(session));
+      if (!session) return;
+      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", session.user.id).maybeSingle();
+      if (active && profile) setCredits(profile.credits);
+    };
+    void loadProfile();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => void loadProfile());
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, []);
 
   const goTo = (section: Section) => {
     setActive(section);
@@ -52,16 +75,41 @@ function Index() {
     document.getElementById(section)?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const sendMessage = () => {
+  const showNotice = (text: string) => {
+    setNotice(text);
+    window.setTimeout(() => setNotice(""), 3500);
+  };
+
+  const sendMessage = async () => {
     const text = message.trim();
-    if (!text) return;
-    setMessages((current) => [...current, { role: "user", text }, { role: "assistant", text: "Tu idea está lista. Esta vista muestra el flujo visual del chat." }]);
+    if (!text || sending) return;
+    if (!loggedIn) {
+      showNotice("Inicia sesión para usar el chat de texto.");
+      return;
+    }
+    setSending(true);
+    setMessages((current) => [...current, { role: "user", text }]);
     setMessage("");
+    try {
+      const result = await sendChat({ data: { message: text, history: messages.slice(-20) } });
+      if (result.ok) {
+        setMessages((current) => [...current, { role: "assistant", text: result.reply }]);
+        setCredits(result.credits);
+      } else if (result.reason === "insufficient_credits") {
+        setCredits(0);
+        showNotice("No te quedan créditos. Recarga tu saldo para seguir generando.");
+      } else {
+        showNotice(result.message);
+      }
+    } catch {
+      showNotice("Inicia sesión para usar el chat de texto.");
+    } finally {
+      setSending(false);
+    }
   };
 
   const generate = (kind: "imagen" | "video") => {
-    setNotice(`${kind === "imagen" ? "Imagen" : "Video"} preparado con el estilo seleccionado.`);
-    window.setTimeout(() => setNotice(""), 2800);
+    showNotice(`${kind === "imagen" ? "Imagen" : "Video"} preparado con el estilo seleccionado.`);
   };
 
   return (
@@ -87,7 +135,7 @@ function Index() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="flex h-9 items-center gap-1.5 rounded-full border border-border bg-overlay px-2.5 text-xs sm:px-3 sm:text-sm">
-              <Coins className="size-3.5 text-accent" /><span className="hidden xs:inline">Créditos:</span><b>50</b>
+              <Coins className="size-3.5 text-accent" /><span className="hidden xs:inline">Créditos:</span><b>{credits ?? 50}</b>
             </div>
             <Button className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm" onClick={() => setNotice("El acceso de usuarios está listo para conectarse.")}>
               <LogIn className="size-4" /><span className="hidden sm:inline">Iniciar sesión</span>
@@ -112,7 +160,7 @@ function Index() {
           </div>
           <div className="mt-4 flex items-end gap-2 rounded-2xl border border-border bg-overlay px-3 py-2 focus-within:border-primary/60">
             <textarea value={message} onChange={(event) => setMessage(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); sendMessage(); } }} rows={2} className="min-w-0 flex-1 resize-none bg-transparent py-1 text-sm outline-none placeholder:text-muted-foreground" placeholder="Escribe tu mensaje…" aria-label="Mensaje" />
-            <Button variant="icon" size="icon" onClick={sendMessage} aria-label="Enviar mensaje"><ArrowUp className="size-4" /></Button>
+            <Button variant="icon" size="icon" onClick={() => void sendMessage()} disabled={sending} aria-label="Enviar mensaje">{sending ? <Loader2 className="size-4 animate-spin" /> : <ArrowUp className="size-4" />}</Button>
           </div>
         </section>
 

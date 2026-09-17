@@ -49,6 +49,25 @@ function Index() {
   const [videoStyle, setVideoStyle] = useState("Cinemático");
   const [notice, setNotice] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [credits, setCredits] = useState<number | null>(null);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [sending, setSending] = useState(false);
+  const sendChat = useServerFn(sendChatMessage);
+
+  useEffect(() => {
+    let active = true;
+    const loadProfile = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!active) return;
+      setLoggedIn(Boolean(session));
+      if (!session) return;
+      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", session.user.id).maybeSingle();
+      if (active && profile) setCredits(profile.credits);
+    };
+    void loadProfile();
+    const { data: sub } = supabase.auth.onAuthStateChange(() => void loadProfile());
+    return () => { active = false; sub.subscription.unsubscribe(); };
+  }, []);
 
   const goTo = (section: Section) => {
     setActive(section);

@@ -36,7 +36,7 @@ export const generateImage = createServerFn({ method: "POST" })
       };
     }
 
-    const apiKey = process.env["FAL_KEY"];
+    const { data: apiKey } = await supabase.rpc("get_api_secret", { p_key: "FAL_KEY" });
     if (!apiKey) {
       return { ok: false, reason: "provider_error", message: "El servicio de imágenes no está configurado todavía." };
     }

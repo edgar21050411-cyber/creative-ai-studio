@@ -34,8 +34,8 @@ export const sendChatMessage = createServerFn({ method: "POST" })
       };
     }
 
-    // 2. Llamar a DeepInfra con el modelo Llama 3 70B Instruct.
-    const apiKey = process.env["DEEPINFRA_API_KEY"];
+    // 2. Leer la clave de DeepInfra desde la base de datos (sobrevive a reimportaciones).
+    const { data: apiKey } = await supabase.rpc("get_api_secret", { p_key: "DEEPINFRA_API_KEY" });
     if (!apiKey) {
       return { ok: false, reason: "provider_error", message: "El servicio de IA no está configurado todavía." };
     }

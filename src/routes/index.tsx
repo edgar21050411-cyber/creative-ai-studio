@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
 import { sendChatMessage } from "@/lib/chat.functions";
+import { generateImage } from "@/lib/image.functions";
 
 import lighthouseCinematic from "@/assets/lighthouse-cinematic.jpg";
 import lighthouseWatercolor from "@/assets/lighthouse-watercolor.jpg";
@@ -52,7 +53,10 @@ function Index() {
   const [credits, setCredits] = useState<number | null>(null);
   const [loggedIn, setLoggedIn] = useState(false);
   const [sending, setSending] = useState(false);
+  const [generatingImage, setGeneratingImage] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const sendChat = useServerFn(sendChatMessage);
+  const generateImageFn = useServerFn(generateImage);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -109,8 +113,38 @@ function Index() {
     }
   };
 
+  const generateImageNow = async () => {
+    const prompt = imagePrompt.trim();
+    if (!prompt || generatingImage) return;
+    if (!loggedIn) {
+      showNotice("Inicia sesión para generar imágenes.");
+      return;
+    }
+    setGeneratingImage(true);
+    try {
+      const result = await generateImageFn({ data: { prompt, style: imageStyle as "Cinematográfico" | "Acuarela" | "3D Render" } });
+      if (result.ok) {
+        setGeneratedImages((prev) => [result.url, ...prev].slice(0, 6));
+        setCredits(result.credits);
+      } else if (result.reason === "insufficient_credits") {
+        setCredits(0);
+        showNotice(result.message);
+      } else {
+        showNotice(result.message);
+      }
+    } catch {
+      showNotice("No se pudo generar la imagen. Inténtalo de nuevo.");
+    } finally {
+      setGeneratingImage(false);
+    }
+  };
+
   const generate = (kind: "imagen" | "video") => {
-    showNotice(`${kind === "imagen" ? "Imagen" : "Video"} preparado con el estilo seleccionado.`);
+    if (kind === "imagen") {
+      void generateImageNow();
+    } else {
+      showNotice("La generación de video aún no está disponible.");
+    }
   };
 
   return (
@@ -136,7 +170,7 @@ function Index() {
           </div>
           <div className="ml-auto flex items-center gap-2">
             <div className="flex h-9 items-center gap-1.5 rounded-full border border-border bg-overlay px-2.5 text-xs sm:px-3 sm:text-sm">
-              <Coins className="size-3.5 text-accent" /><span className="hidden xs:inline">Créditos:</span><b>{credits ?? 50}</b>
+              <Coins className="size-3.5 text-accent" /><span className="hidden sm:inline">Créditos:</span><b>{credits ?? 50}</b>
             </div>
             {loggedIn ? (
               <Button variant="ghost" className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm" onClick={() => void supabase.auth.signOut()}>
@@ -178,11 +212,13 @@ function Index() {
               <textarea value={imagePrompt} onChange={(event) => setImagePrompt(event.target.value)} rows={3} className="flex-1 resize-none rounded-2xl border border-border bg-overlay px-4 py-3 text-sm outline-none focus:border-primary/60" aria-label="Descripción de imagen" />
               <div className="flex flex-col gap-2 sm:w-52">
                 <select value={imageStyle} onChange={(event) => setImageStyle(event.target.value)} className="h-10 rounded-xl border border-border bg-secondary px-3 text-sm text-muted-foreground outline-none" aria-label="Estilo de imagen"><option>Cinematográfico</option><option>Acuarela</option><option>3D Render</option></select>
-                <Button onClick={() => generate("imagen")} className="w-full"><Sparkles className="size-4" /> Generar</Button>
+                <Button onClick={() => generate("imagen")} className="w-full" disabled={generatingImage}>{generatingImage ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} {generatingImage ? "Generando…" : "Generar"}</Button>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-2 sm:gap-3">
-              {[lighthouseCinematic, lighthouseWatercolor, lighthouse3d].map((src, index) => <img key={src} src={src} alt={["Faro cinematográfico entre niebla", "Faro pintado en acuarela", "Faro futurista en 3D"][index]} loading="lazy" width={816} height={816} className="aspect-square w-full rounded-xl object-cover ring-1 ring-border transition hover:scale-[1.02]" />)}
+              {generatedImages.length > 0
+                ? generatedImages.map((src, index) => <img key={`${src}-${index}`} src={src} alt={`Imagen generada ${index + 1}`} loading="lazy" width={816} height={816} className="aspect-square w-full rounded-xl object-cover ring-1 ring-border transition hover:scale-[1.02]" />)
+                : [lighthouseCinematic, lighthouseWatercolor, lighthouse3d].map((src, index) => <img key={src} src={src} alt={["Faro cinematográfico entre niebla", "Faro pintado en acuarela", "Faro futurista en 3D"][index]} loading="lazy" width={816} height={816} className="aspect-square w-full rounded-xl object-cover ring-1 ring-border transition hover:scale-[1.02]" />)}
             </div>
           </section>
 

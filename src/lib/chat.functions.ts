@@ -17,7 +17,7 @@ export type ChatResult =
 
 export const sendChatMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => ChatInput.parse(input))
+  .validator((input: unknown) => ChatInput.parse(input))
   .handler(async ({ data, context }): Promise<ChatResult> => {
     const { supabase } = context;
 

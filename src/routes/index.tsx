@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { ArrowUp, Coins, Image as ImageIcon, Loader2, LogIn, Menu, Play, Sparkles, Video } from "lucide-react";
+import { ArrowUp, Coins, Image as ImageIcon, Loader2, LogIn, LogOut, Menu, Play, Sparkles, Video } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -53,6 +53,7 @@ function Index() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [sending, setSending] = useState(false);
   const sendChat = useServerFn(sendChatMessage);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;
@@ -137,9 +138,15 @@ function Index() {
             <div className="flex h-9 items-center gap-1.5 rounded-full border border-border bg-overlay px-2.5 text-xs sm:px-3 sm:text-sm">
               <Coins className="size-3.5 text-accent" /><span className="hidden xs:inline">Créditos:</span><b>{credits ?? 50}</b>
             </div>
-            <Button className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm" onClick={() => setNotice("El acceso de usuarios está listo para conectarse.")}>
-              <LogIn className="size-4" /><span className="hidden sm:inline">Iniciar sesión</span>
-            </Button>
+            {loggedIn ? (
+              <Button variant="ghost" className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm" onClick={() => void supabase.auth.signOut()}>
+                <LogOut className="size-4" /><span className="hidden sm:inline">Salir</span>
+              </Button>
+            ) : (
+              <Button className="h-9 rounded-full px-3 text-xs sm:px-4 sm:text-sm" onClick={() => navigate({ to: "/auth" })}>
+                <LogIn className="size-4" /><span className="hidden sm:inline">Iniciar sesión</span>
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen((open) => !open)}><Menu className="size-5" /></Button>
           </div>
           {menuOpen && <div className="glass absolute left-3 right-3 top-[4.5rem] grid gap-1 rounded-xl p-2 md:hidden">{(["texto", "imagenes", "video"] as Section[]).map((item) => <Button key={item} variant="ghost" onClick={() => goTo(item)}>{sectionLabels[item]}</Button>)}</div>}

@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowUp, Coins, Image as ImageIcon, LogIn, Menu, Play, Sparkles, Video } from "lucide-react";
-import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { ArrowUp, Coins, Image as ImageIcon, Loader2, LogIn, Menu, Play, Sparkles, Video } from "lucide-react";
+import { useEffect, useState } from "react";
+
+import { supabase } from "@/integrations/supabase/client";
+import { sendChatMessage } from "@/lib/chat.functions";
 
 import lighthouseCinematic from "@/assets/lighthouse-cinematic.jpg";
 import lighthouseWatercolor from "@/assets/lighthouse-watercolor.jpg";

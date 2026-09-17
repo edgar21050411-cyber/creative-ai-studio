@@ -25,6 +25,12 @@ export const Route = createFileRoute("/")({
 
 type Section = "texto" | "imagenes" | "video";
 
+const sectionLabels: Record<Section, string> = {
+  texto: "Texto",
+  imagenes: "Imágenes",
+  video: "Video",
+};
+
 function Index() {
   const [active, setActive] = useState<Section>("texto");
   const [message, setMessage] = useState("");
@@ -75,7 +81,7 @@ function Index() {
           <div className="ml-3 hidden items-center gap-1 md:flex">
             {(["texto", "imagenes", "video"] as Section[]).map((item) => (
               <Button key={item} variant="ghost" size="sm" onClick={() => goTo(item)} className={active === item ? "bg-overlay-strong text-foreground" : ""}>
-                {item === "imagenes" ? "Imágenes" : item[0].toUpperCase() + item.slice(1)}
+                {sectionLabels[item]}
               </Button>
             ))}
           </div>
@@ -88,7 +94,7 @@ function Index() {
             </Button>
             <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menú" onClick={() => setMenuOpen((open) => !open)}><Menu className="size-5" /></Button>
           </div>
-          {menuOpen && <div className="glass absolute left-3 right-3 top-[4.5rem] grid gap-1 rounded-xl p-2 md:hidden">{(["texto", "imagenes", "video"] as Section[]).map((item) => <Button key={item} variant="ghost" onClick={() => goTo(item)}>{item === "imagenes" ? "Imágenes" : item[0].toUpperCase() + item.slice(1)}</Button>)}</div>}
+          {menuOpen && <div className="glass absolute left-3 right-3 top-[4.5rem] grid gap-1 rounded-xl p-2 md:hidden">{(["texto", "imagenes", "video"] as Section[]).map((item) => <Button key={item} variant="ghost" onClick={() => goTo(item)}>{sectionLabels[item]}</Button>)}</div>}
         </nav>
       </header>
 

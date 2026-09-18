@@ -35,8 +35,7 @@ export const sendChatMessage = createServerFn({ method: "POST" })
     }
 
     // 2. Leer la clave de DeepInfra desde la base de datos (sobrevive a reimportaciones).
-    const rpc = supabase.rpc as unknown as (fn: string, args: Record<string, unknown>) => Promise<{ data: string | null }>;
-    const { data: apiKey } = await rpc("get_api_secret", { p_key: "DEEPINFRA_API_KEY" });
+    const apiKey = process.env["DEEPINFRA_API_KEY"];
     if (!apiKey) {
       return { ok: false, reason: "provider_error", message: "El servicio de IA no está configurado todavía." };
     }

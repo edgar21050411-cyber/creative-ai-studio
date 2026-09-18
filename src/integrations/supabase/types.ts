@@ -44,7 +44,6 @@ export type Database = {
     }
     Functions: {
       deduct_credits: { Args: { p_amount: number }; Returns: number }
-      get_api_secret: { Args: { p_key: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never

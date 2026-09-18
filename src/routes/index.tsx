@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendChatMessage } from "@/lib/chat.functions";
 import { generateImage } from "@/lib/image.functions";
+import { generateVideo } from "@/lib/video.functions";
 
 import lighthouseCinematic from "@/assets/lighthouse-cinematic.jpg";
 import lighthouseWatercolor from "@/assets/lighthouse-watercolor.jpg";
@@ -55,8 +56,11 @@ function Index() {
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatingVideo, setGeneratingVideo] = useState(false);
+  const [generatedVideos, setGeneratedVideos] = useState<string[]>([]);
   const sendChat = useServerFn(sendChatMessage);
   const generateImageFn = useServerFn(generateImage);
+  const generateVideoFn = useServerFn(generateVideo);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -139,11 +143,36 @@ function Index() {
     }
   };
 
+  const generateVideoNow = async () => {
+    const prompt = videoPrompt.trim();
+    if (!prompt || generatingVideo) return;
+    if (!loggedIn) {
+      showNotice("Inicia sesión para generar videos.");
+      return;
+    }
+    setGeneratingVideo(true);
+    showNotice("Generando video… puede tardar cerca de un minuto.");
+    try {
+      const result = await generateVideoFn({ data: { prompt, style: videoStyle as "Cinemático" | "Timelapse" | "Stop motion" } });
+      if (result.ok) {
+        setGeneratedVideos((prev) => [result.url, ...prev].slice(0, 4));
+        setCredits(result.credits);
+      } else {
+        if (result.reason === "insufficient_credits") setCredits(0);
+        showNotice(result.message);
+      }
+    } catch {
+      showNotice("No se pudo generar el video. Inténtalo de nuevo.");
+    } finally {
+      setGeneratingVideo(false);
+    }
+  };
+
   const generate = (kind: "imagen" | "video") => {
     if (kind === "imagen") {
       void generateImageNow();
     } else {
-      showNotice("La generación de video aún no está disponible.");
+      void generateVideoNow();
     }
   };
 
@@ -228,11 +257,13 @@ function Index() {
               <textarea value={videoPrompt} onChange={(event) => setVideoPrompt(event.target.value)} rows={3} className="flex-1 resize-none rounded-2xl border border-border bg-overlay px-4 py-3 text-sm outline-none focus:border-primary/60" aria-label="Descripción de video" />
               <div className="flex flex-col gap-2 sm:w-52">
                 <select value={videoStyle} onChange={(event) => setVideoStyle(event.target.value)} className="h-10 rounded-xl border border-border bg-secondary px-3 text-sm text-muted-foreground outline-none" aria-label="Estilo de video"><option>Cinemático</option><option>Timelapse</option><option>Stop motion</option></select>
-                <Button onClick={() => generate("video")} className="w-full"><Play className="size-4" /> Generar video</Button>
+                <Button onClick={() => generate("video")} className="w-full" disabled={generatingVideo}>{generatingVideo ? <Loader2 className="size-4 animate-spin" /> : <Play className="size-4" />} {generatingVideo ? "Generando…" : "Generar video"}</Button>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {[videoNeonCity, videoSkyline].map((src, index) => <div key={src} className="group relative overflow-hidden rounded-xl ring-1 ring-border"><img src={src} alt={index === 0 ? "Vista aérea de ciudad de neón" : "Horizonte futurista al atardecer"} loading="lazy" width={1280} height={720} className="aspect-video w-full object-cover transition duration-500 group-hover:scale-105" /><span className="absolute inset-0 grid place-items-center bg-background/10"><span className="grid size-10 place-items-center rounded-full border border-foreground/30 bg-background/55 backdrop-blur"><Play className="ml-0.5 size-4" /></span></span></div>)}
+              {generatedVideos.length > 0
+                ? generatedVideos.map((src, index) => <video key={`${src}-${index}`} src={src} controls playsInline className="aspect-video w-full rounded-xl object-cover ring-1 ring-border" />)
+                : [videoNeonCity, videoSkyline].map((src, index) => <div key={src} className="group relative overflow-hidden rounded-xl ring-1 ring-border"><img src={src} alt={index === 0 ? "Vista aérea de ciudad de neón" : "Horizonte futurista al atardecer"} loading="lazy" width={1280} height={720} className="aspect-video w-full object-cover transition duration-500 group-hover:scale-105" /><span className="absolute inset-0 grid place-items-center bg-background/10"><span className="grid size-10 place-items-center rounded-full border border-foreground/30 bg-background/55 backdrop-blur"><Play className="ml-0.5 size-4" /></span></span></div>)}
             </div>
           </section>
         </div>

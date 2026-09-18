@@ -143,11 +143,36 @@ function Index() {
     }
   };
 
+  const generateVideoNow = async () => {
+    const prompt = videoPrompt.trim();
+    if (!prompt || generatingVideo) return;
+    if (!loggedIn) {
+      showNotice("Inicia sesión para generar videos.");
+      return;
+    }
+    setGeneratingVideo(true);
+    showNotice("Generando video… puede tardar cerca de un minuto.");
+    try {
+      const result = await generateVideoFn({ data: { prompt, style: videoStyle as "Cinemático" | "Timelapse" | "Stop motion" } });
+      if (result.ok) {
+        setGeneratedVideos((prev) => [result.url, ...prev].slice(0, 4));
+        setCredits(result.credits);
+      } else {
+        if (result.reason === "insufficient_credits") setCredits(0);
+        showNotice(result.message);
+      }
+    } catch {
+      showNotice("No se pudo generar el video. Inténtalo de nuevo.");
+    } finally {
+      setGeneratingVideo(false);
+    }
+  };
+
   const generate = (kind: "imagen" | "video") => {
     if (kind === "imagen") {
       void generateImageNow();
     } else {
-      showNotice("La generación de video aún no está disponible.");
+      void generateVideoNow();
     }
   };
 

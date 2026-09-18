@@ -70,7 +70,12 @@ function Index() {
       if (!active) return;
       setLoggedIn(Boolean(session));
       if (!session) return;
-      const { data: profile } = await supabase.from("profiles").select("credits").eq("id", session.user.id).maybeSingle();
+      let { data: profile } = await supabase.from("profiles").select("credits").eq("id", session.user.id).maybeSingle();
+      if (!profile) {
+        await supabase.from("profiles").insert({ id: session.user.id, email: session.user.email ?? "" });
+        const retry = await supabase.from("profiles").select("credits").eq("id", session.user.id).maybeSingle();
+        profile = retry.data;
+      }
       if (active && profile) setCredits(profile.credits);
     };
     void loadProfile();

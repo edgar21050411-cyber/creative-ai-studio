@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { sendChatMessage } from "@/lib/chat.functions";
 import { generateImage } from "@/lib/image.functions";
+import { generateVideo } from "@/lib/video.functions";
 
 import lighthouseCinematic from "@/assets/lighthouse-cinematic.jpg";
 import lighthouseWatercolor from "@/assets/lighthouse-watercolor.jpg";
@@ -55,8 +56,11 @@ function Index() {
   const [sending, setSending] = useState(false);
   const [generatingImage, setGeneratingImage] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatingVideo, setGeneratingVideo] = useState(false);
+  const [generatedVideos, setGeneratedVideos] = useState<string[]>([]);
   const sendChat = useServerFn(sendChatMessage);
   const generateImageFn = useServerFn(generateImage);
+  const generateVideoFn = useServerFn(generateVideo);
   const navigate = useNavigate();
 
   useEffect(() => {
